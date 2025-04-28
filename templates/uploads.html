@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Uploads</title>
+</head>
+<body>
+    <h1>Listado de Imágenes Subidas</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Nombre del Archivo</th>
+                <th>Número de Píxeles</th>
+                <th>Fecha de Subida</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in uploads %}
+            <tr>
+                <td>{{ upload.user }}</td>
+                <td>{{ upload.filename }}</td>
+                <td>{{ upload.pixel_count }}</td>
+                <td>{{ upload.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

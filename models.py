@@ -3,6 +3,15 @@ from sqlalchemy.orm import validates
 
 from app import db
 
+#para PECL2
+class ImageUpload(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    user = db.Column(db.String(255), nullable=False)
+    pixel_count = db.Column(db.Integer, nullable=False)
+    upload_date = db.Column(db.DateTime, nullable=False)
+
+
 
 class Restaurant(db.Model):
     __tablename__ = 'restaurant'

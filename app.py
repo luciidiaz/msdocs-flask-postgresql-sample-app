@@ -10,6 +10,38 @@ from flask_wtf.csrf import CSRFProtect
 app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
 
+from flask import jsonify
+
+@app.route('/api/upload', methods=['POST'])
+@csrf.exempt
+def upload_image_info():
+    try:
+        filename = request.json.get('filename')
+        user = request.json.get('user')
+        pixel_count = request.json.get('pixel_count')
+
+        if not filename or not user or pixel_count is None:
+            return jsonify({"error": "Missing fields"}), 400
+
+        image_upload = ImageUpload(
+            filename=filename,
+            user=user,
+            pixel_count=int(pixel_count),
+            upload_date=datetime.now()
+        )
+        db.session.add(image_upload)
+        db.session.commit()
+
+        return jsonify({"message": "Upload successful"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/uploads', methods=['GET'])
+def view_uploads():
+    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
+    return render_template('uploads.html', uploads=uploads)
+
+
 # WEBSITE_HOSTNAME exists only in production environment
 if 'WEBSITE_HOSTNAME' not in os.environ:
     # local development, where we'll use environment variables
