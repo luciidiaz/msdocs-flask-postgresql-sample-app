@@ -14,6 +14,7 @@ from flask import jsonify
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
+
 def upload_image_info():
     try:
         filename = request.json.get('filename')
@@ -55,7 +56,13 @@ else:
 app.config.update(
     SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    # DEBUG: mostrar a qué host se está conectando
+    
 )
+uri_display = app.config.get('DATABASE_URI')
+if uri_display:
+    print(f"Conectando a BBDD en: {uri_display.split('@')[1].split('/')[0]}")
+
 
 # Initialize the database connection
 db = SQLAlchemy(app)
