@@ -59,9 +59,6 @@ app.config.update(
     # DEBUG: mostrar a qué host se está conectando
     
 )
-uri_display = app.config.get('DATABASE_URI')
-if uri_display:
-    print(f"Conectando a BBDD en: {uri_display.split('@')[1].split('/')[0]}")
 
 
 # Initialize the database connection
