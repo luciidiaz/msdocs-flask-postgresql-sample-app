@@ -11,14 +11,12 @@ app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
 
 from flask import jsonify
-# The import must be done after db initialization due to circular import issue
-from models import ImageUpload, ImageColor,  Restaurant, Review
-
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
 def upload_image_info():
     try:
+        # Obtener los datos de la solicitud JSON
         data = request.get_json()
         filename = data.get('filename')
         user = data.get('user')
@@ -28,29 +26,38 @@ def upload_image_info():
         if not filename or not user or not upload_date:
             return jsonify({"error": "Missing required fields"}), 400
 
+        # Crear la entrada en la tabla ImageUpload
         image_upload = ImageUpload(
             filename=filename,
             user=user,
             upload_date=datetime.fromisoformat(upload_date),
             pixel_count=sum(c.get('count', 0) for c in colors)
         )
+        
+        # Añadir la entrada de la imagen
         db.session.add(image_upload)
-        db.session.flush()  # Necesario para obtener el ID antes del commit
 
-        for color in colors:
-            color_entry = ImageColor(
+        # Crear la lista de objetos ImageColor
+        color_entries = [
+            ImageColor(
                 image_id=image_upload.id,
                 r=color.get('r'),
                 g=color.get('g'),
                 b=color.get('b'),
                 count=color.get('count')
             )
-            db.session.add(color_entry)
+            for color in colors
+        ]
 
+        # Usamos bulk_save_objects para insertar todos los colores en una sola operación
+        db.session.bulk_save_objects(color_entries)
+
+        # Commit de la transacción
         db.session.commit()
 
         return jsonify({"message": "Upload successful"}), 200
     except Exception as e:
+        # En caso de error, revertir la transacción
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
@@ -85,6 +92,8 @@ db = SQLAlchemy(app)
 # Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
 migrate = Migrate(app, db)
 
+# The import must be done after db initialization due to circular import issue
+from models import ImageUpload, ImageColor,  Restaurant, Review
 
 #@app.route('/', methods=['GET'])
 #def index():
