@@ -17,6 +17,7 @@ from werkzeug.utils import secure_filename
 # Configuración para las cargas de archivos
 app.config['UPLOAD_FOLDER'] = 'uploads'  # Directorio donde se guardarán las imágenes
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'bmp'}  # Tipos de archivos permitidos
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Máximo 16MB por archivo
 
 # Función para verificar si el archivo tiene una extensión permitida
 def allowed_file(filename):
@@ -62,55 +63,58 @@ from models import ImageUpload, ImageColor,  Restaurant, Review
 @csrf.exempt
 def upload_image_info():
     try:
-        # Obtener los datos del JSON
-        data = request.get_json()
-        filename = data.get('filename')
-        user = data.get('user')
-        upload_date = data.get('upload_date')
-        colors = data.get('colors', [])
-
-        if not filename or not user or not upload_date:
-            return jsonify({"error": "Missing required fields"}), 400
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
         
-        # Subir la imagen
-        image = request.files['image']
-        if image:
-            # Asegúrate de usar un nombre seguro para el archivo
-            filename = secure_filename(image.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image.save(filepath)
-        
-        # Crear la entrada en la tabla ImageUpload
-        image_upload = ImageUpload(
-            filename=filename,
-            user=user,
-            upload_date=datetime.fromisoformat(upload_date),
-            pixel_count=sum(c.get('count', 0) for c in colors),
-            image_path=filepath  # Guardar la ruta de la imagen
-        )
+        # Verificar si la extensión del archivo es válida
+        if file and allowed_file(file.filename):
+            # Guardar la imagen
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
 
-        db.session.add(image_upload)
-        db.session.commit()
+            # Obtener otros datos
+            data = request.form  # Los demás datos vienen en el formulario
+            user = data.get('user')
+            filename = data.get('filename')
+            upload_date = data.get('upload_date')
+            colors = data.get('colors', [])
 
-        # Añadir los colores detectados
-        for color in colors:
-            color_entry = ImageColor(
-                image_id=image_upload.id,
-                r=color.get('r'),
-                g=color.get('g'),
-                b=color.get('b'),
-                count=color.get('count')
+            if not filename or not user or not upload_date:
+                return jsonify({"error": "Missing required fields"}), 400
+
+            # Crear la entrada en la tabla ImageUpload
+            image_upload = ImageUpload(
+                filename=filename,
+                user=user,
+                upload_date=datetime.fromisoformat(upload_date),
+                pixel_count=sum(c.get('count', 0) for c in colors),
+                image_path=file_path  # Guardar el path del archivo
             )
-            db.session.add(color_entry)
 
-        db.session.commit()
+            db.session.add(image_upload)
+            db.session.commit()  # Commit para que se genere el ID correctamente
 
-        return jsonify({"message": "Upload successful"}), 200
+            for color in colors:
+                color_entry = ImageColor(
+                    image_id=image_upload.id,
+                    r=color.get('r'),
+                    g=color.get('g'),
+                    b=color.get('b'),
+                    count=color.get('count')
+                )
+                db.session.add(color_entry)
+
+            db.session.commit()
+
+            return jsonify({"message": "Upload successful"}), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/', methods=['GET'])
 def index():
