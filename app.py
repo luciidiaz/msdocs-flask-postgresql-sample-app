@@ -12,6 +12,47 @@ csrf = CSRFProtect(app)
 
 from flask import jsonify
 
+    
+@app.route('/uploads', methods=['GET'])
+def view_uploads():
+    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
+    return render_template('uploads.html', uploads=uploads)
+
+
+# WEBSITE_HOSTNAME exists only in production environment
+if 'WEBSITE_HOSTNAME' not in os.environ:
+    # local development, where we'll use environment variables
+    print("Loading config.development and environment variables from .env file.")
+    app.config.from_object('azureproject.development')
+else:
+    # production
+    print("Loading config.production.")
+    app.config.from_object('azureproject.production')
+
+app.config.update(
+    SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    # DEBUG: mostrar a qué host se está conectando
+    
+)
+
+
+# Initialize the database connection
+db = SQLAlchemy(app)
+
+# Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
+migrate = Migrate(app, db)
+
+# The import must be done after db initialization due to circular import issue
+from models import ImageUpload, ImageColor,  Restaurant, Review
+
+#@app.route('/', methods=['GET'])
+#def index():
+#    print('Request for index page received')
+#    restaurants = Restaurant.query.all()
+#    return render_template('index.html', restaurants=restaurants)
+
+
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
 def upload_image_info():
@@ -61,45 +102,7 @@ def upload_image_info():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-    
-@app.route('/uploads', methods=['GET'])
-def view_uploads():
-    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
-    return render_template('uploads.html', uploads=uploads)
 
-
-# WEBSITE_HOSTNAME exists only in production environment
-if 'WEBSITE_HOSTNAME' not in os.environ:
-    # local development, where we'll use environment variables
-    print("Loading config.development and environment variables from .env file.")
-    app.config.from_object('azureproject.development')
-else:
-    # production
-    print("Loading config.production.")
-    app.config.from_object('azureproject.production')
-
-app.config.update(
-    SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    # DEBUG: mostrar a qué host se está conectando
-    
-)
-
-
-# Initialize the database connection
-db = SQLAlchemy(app)
-
-# Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
-migrate = Migrate(app, db)
-
-# The import must be done after db initialization due to circular import issue
-from models import ImageUpload, ImageColor,  Restaurant, Review
-
-#@app.route('/', methods=['GET'])
-#def index():
-#    print('Request for index page received')
-#    restaurants = Restaurant.query.all()
-#    return render_template('index.html', restaurants=restaurants)
 
 @app.route('/', methods=['GET'])
 def index():
