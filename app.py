@@ -11,6 +11,9 @@ app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
 
 from flask import jsonify
+# The import must be done after db initialization due to circular import issue
+from models import ImageUpload, ImageColor,  Restaurant, Review
+
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
@@ -82,8 +85,6 @@ db = SQLAlchemy(app)
 # Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
 migrate = Migrate(app, db)
 
-# The import must be done after db initialization due to circular import issue
-from models import ImageUpload, ImageColor,  Restaurant, Review
 
 #@app.route('/', methods=['GET'])
 #def index():
