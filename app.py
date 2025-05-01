@@ -57,7 +57,6 @@ from models import ImageUpload, ImageColor,  Restaurant, Review
 @csrf.exempt
 def upload_image_info():
     try:
-        # Obtener los datos de la solicitud JSON
         data = request.get_json()
         filename = data.get('filename')
         user = data.get('user')
@@ -67,39 +66,34 @@ def upload_image_info():
         if not filename or not user or not upload_date:
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Crear la entrada en la tabla ImageUpload
+        # Crear la entrada principal
         image_upload = ImageUpload(
             filename=filename,
             user=user,
             upload_date=datetime.fromisoformat(upload_date),
             pixel_count=sum(c.get('count', 0) for c in colors)
         )
-        
-        # Añadir la entrada de la imagen
-        db.session.add(image_upload)
-        db.session.flush()
 
-        # Crear la lista de objetos ImageColor
-        color_entries = [
-            ImageColor(
+        db.session.add(image_upload)
+        db.session.commit()  # Commit para que se genere el ID correctamente
+
+        # Ahora image_upload.id ya está disponible
+
+        for color in colors:
+            color_entry = ImageColor(
                 image_id=image_upload.id,
                 r=color.get('r'),
                 g=color.get('g'),
                 b=color.get('b'),
                 count=color.get('count')
             )
-            for color in colors
-        ]
+            db.session.add(color_entry)
 
-        # Usamos bulk_save_objects para insertar todos los colores en una sola operación
-        db.session.bulk_save_objects(color_entries)
-
-        # Commit de la transacción
-        db.session.commit()
+        db.session.commit()  #Commit de los colores
 
         return jsonify({"message": "Upload successful"}), 200
+
     except Exception as e:
-        # En caso de error, revertir la transacción
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
