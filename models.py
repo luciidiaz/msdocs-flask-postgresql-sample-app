@@ -10,6 +10,7 @@ class ImageUpload(db.Model):
     user = db.Column(db.String(255), nullable=False)
     pixel_count = db.Column(db.Integer, nullable=False)
     upload_date = db.Column(db.DateTime, nullable=False)
+    image_path = db.Column(db.String(255), nullable=False)  # Nueva columna para la ruta de la imagen
     colors = db.relationship('ImageColor', backref='image', cascade="all, delete-orphan", lazy=True)
 
 

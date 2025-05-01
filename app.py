@@ -5,14 +5,24 @@ from flask import Flask, redirect, render_template, request, send_from_directory
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
 
 from flask import jsonify
+import os
+from werkzeug.utils import secure_filename
 
-    
+# Configuración para las cargas de archivos
+app.config['UPLOAD_FOLDER'] = 'uploads'  # Directorio donde se guardarán las imágenes
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'bmp'}  # Tipos de archivos permitidos
+
+# Función para verificar si el archivo tiene una extensión permitida
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
 @app.route('/uploads', methods=['GET'])
 def view_uploads():
     uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
@@ -46,17 +56,13 @@ migrate = Migrate(app, db)
 # The import must be done after db initialization due to circular import issue
 from models import ImageUpload, ImageColor,  Restaurant, Review
 
-#@app.route('/', methods=['GET'])
-#def index():
-#    print('Request for index page received')
-#    restaurants = Restaurant.query.all()
-#    return render_template('index.html', restaurants=restaurants)
 
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
 def upload_image_info():
     try:
+        # Obtener los datos del JSON
         data = request.get_json()
         filename = data.get('filename')
         user = data.get('user')
@@ -65,20 +71,28 @@ def upload_image_info():
 
         if not filename or not user or not upload_date:
             return jsonify({"error": "Missing required fields"}), 400
-
-        # Crear la entrada principal
+        
+        # Subir la imagen
+        image = request.files['image']
+        if image:
+            # Asegúrate de usar un nombre seguro para el archivo
+            filename = secure_filename(image.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(filepath)
+        
+        # Crear la entrada en la tabla ImageUpload
         image_upload = ImageUpload(
             filename=filename,
             user=user,
             upload_date=datetime.fromisoformat(upload_date),
-            pixel_count=sum(c.get('count', 0) for c in colors)
+            pixel_count=sum(c.get('count', 0) for c in colors),
+            image_path=filepath  # Guardar la ruta de la imagen
         )
 
         db.session.add(image_upload)
-        db.session.commit()  # Commit para que se genere el ID correctamente
+        db.session.commit()
 
-        # Ahora image_upload.id ya está disponible
-
+        # Añadir los colores detectados
         for color in colors:
             color_entry = ImageColor(
                 image_id=image_upload.id,
@@ -89,14 +103,13 @@ def upload_image_info():
             )
             db.session.add(color_entry)
 
-        db.session.commit()  #Commit de los colores
+        db.session.commit()
 
         return jsonify({"message": "Upload successful"}), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 
 @app.route('/', methods=['GET'])
