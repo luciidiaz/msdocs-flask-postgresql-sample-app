@@ -14,28 +14,43 @@ from flask import jsonify
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
-
 def upload_image_info():
     try:
-        filename = request.json.get('filename')
-        user = request.json.get('user')
-        pixel_count = request.json.get('pixel_count')
+        data = request.get_json()
+        filename = data.get('filename')
+        user = data.get('user')
+        upload_date = data.get('upload_date')
+        colors = data.get('colors', [])
 
-        if not filename or not user or pixel_count is None:
-            return jsonify({"error": "Missing fields"}), 400
+        if not filename or not user or not upload_date:
+            return jsonify({"error": "Missing required fields"}), 400
 
         image_upload = ImageUpload(
             filename=filename,
             user=user,
-            pixel_count=int(pixel_count),
-            upload_date=datetime.now()
+            upload_date=datetime.fromisoformat(upload_date),
+            pixel_count=sum(c.get('count', 0) for c in colors)
         )
         db.session.add(image_upload)
+        db.session.flush()  # Necesario para obtener el ID antes del commit
+
+        for color in colors:
+            color_entry = ImageColor(
+                image_id=image_upload.id,
+                r=color.get('r'),
+                g=color.get('g'),
+                b=color.get('b'),
+                count=color.get('count')
+            )
+            db.session.add(color_entry)
+
         db.session.commit()
 
         return jsonify({"message": "Upload successful"}), 200
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
     
 @app.route('/uploads', methods=['GET'])
 def view_uploads():

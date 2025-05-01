@@ -6,13 +6,14 @@
 </head>
 <body>
     <h1>Listado de Imágenes Subidas</h1>
-    <table border="1">
+    <table border="1" cellpadding="6">
         <thead>
             <tr>
                 <th>Usuario</th>
                 <th>Nombre del Archivo</th>
                 <th>Número de Píxeles</th>
                 <th>Fecha de Subida</th>
+                <th>Colores Detectados</th>
             </tr>
         </thead>
         <tbody>
@@ -22,6 +23,17 @@
                 <td>{{ upload.filename }}</td>
                 <td>{{ upload.pixel_count }}</td>
                 <td>{{ upload.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>
+                    {% if upload.colors %}
+                        <ul>
+                        {% for color in upload.colors %}
+                            <li>(<code>{{ color.r }}, {{ color.g }}, {{ color.b }}</code>): {{ color.count }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <em>Sin colores</em>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

@@ -10,6 +10,17 @@ class ImageUpload(db.Model):
     user = db.Column(db.String(255), nullable=False)
     pixel_count = db.Column(db.Integer, nullable=False)
     upload_date = db.Column(db.DateTime, nullable=False)
+    colors = db.relationship('ImageColor', backref='image', cascade="all, delete-orphan", lazy=True)
+
+
+class ImageColor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    image_id = db.Column(db.Integer, db.ForeignKey('image_upload.id'), nullable=False)
+    r = db.Column(db.Integer, nullable=False)
+    g = db.Column(db.Integer, nullable=False)
+    b = db.Column(db.Integer, nullable=False)
+    count = db.Column(db.Integer, nullable=False)
+
 
 
 
