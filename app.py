@@ -77,6 +77,7 @@ def upload_image_info():
         
         # Añadir la entrada de la imagen
         db.session.add(image_upload)
+        db.session.flush()
 
         # Crear la lista de objetos ImageColor
         color_entries = [
