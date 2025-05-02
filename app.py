@@ -16,7 +16,7 @@ import os
 from werkzeug.utils import secure_filename
 
 # Configuración para las cargas de archivos
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Directorio donde se guardarán las imágenes
+app.config['UPLOAD_FOLDER'] = '/home/data/uploads'  # Usa una ruta permitida en Azure
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'bmp'}  # Tipos de archivos permitidos
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Máximo 16MB por archivo
 
