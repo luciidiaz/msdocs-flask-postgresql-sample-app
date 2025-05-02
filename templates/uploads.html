@@ -11,6 +11,7 @@
             <tr>
                 <th>Usuario</th>
                 <th>Nombre del Archivo</th>
+                <th>Imagen</th>
                 <th>Número de Píxeles</th>
                 <th>Fecha de Subida</th>
                 <th>Colores Detectados</th>
@@ -21,6 +22,9 @@
             <tr>
                 <td>{{ upload.user }}</td>
                 <td>{{ upload.filename }}</td>
+                <td>
+                    <img src="{{ url_for('static', filename='uploads/' + upload.filename) }}" alt="{{ upload.filename }}" width="100">
+                </td>
                 <td>{{ upload.pixel_count }}</td>
                 <td>{{ upload.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                 <td>
