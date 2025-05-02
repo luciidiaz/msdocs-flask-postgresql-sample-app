@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
+import json
 
 app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
@@ -77,7 +78,16 @@ def upload_image_info():
             file.save(file_path)
 
             # Obtener otros datos
-            data = request.form  # Los demás datos vienen en el formulario
+            # 'json' viene como un string en multipart
+            json_raw = request.form.get("json")
+            if not json_raw:
+                return jsonify({"error": "Missing json part"}), 400
+
+            try:
+                data = json.loads(json_raw)
+            except json.JSONDecodeError:
+                return jsonify({"error": "Invalid JSON in 'json' field"}), 400
+
             user = data.get('user')
             filename = data.get('filename')
             upload_date = data.get('upload_date')
