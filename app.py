@@ -74,7 +74,11 @@ def upload_image_info():
         if file and allowed_file(file.filename):
             # Guardar la imagen
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Asegura que la ruta es absoluta y existe
+            upload_folder = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+            os.makedirs(upload_folder, exist_ok=True)  # crea la carpeta si no existe
+            file_path = os.path.join(upload_folder, filename)
+
             file.save(file_path)
 
             # Obtener otros datos
