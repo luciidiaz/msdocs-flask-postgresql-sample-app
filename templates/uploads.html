@@ -61,8 +61,10 @@
                 <td>{{ upload.user }}</td>
                 <td>{{ upload.filename }}</td>
                 <td>
-                    <img src="{{ url_for('static', filename='uploads/' + upload.filename) }}" alt="{{ upload.filename }}" width="100" 
-                    onclick="openModal('{{ url_for('static', filename='uploads/' + upload.filename) }}')">
+                    <img src="{{ url_for('uploaded_file', filename=upload.filename) }}" 
+                         alt="{{ upload.filename }}" 
+                         width="100" 
+                         onclick="openModal('{{ url_for('uploaded_file', filename=upload.filename) }}')">
                 </td>
                 <td>{{ upload.pixel_count }}</td>
                 <td>{{ upload.upload_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>

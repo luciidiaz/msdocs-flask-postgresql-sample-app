@@ -135,6 +135,9 @@ def index():
     uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
     return render_template('uploads.html', uploads=uploads)
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/<int:id>', methods=['GET'])
 def details(id):
