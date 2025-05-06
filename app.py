@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.utils import secure_filename
 import json
+from sqlalchemy import asc, desc
+
 
 app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
@@ -25,9 +27,34 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
+#@app.route('/uploads', methods=['GET'])
+#def view_uploads():
+#    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
+#    return render_template('uploads.html', uploads=uploads)
+
+#para aplicar los filtros
 @app.route('/uploads', methods=['GET'])
 def view_uploads():
-    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
+    search_user = request.args.get('user')
+    search_filename = request.args.get('filename')
+    sort_by = request.args.get('sort_by', 'upload_date')
+    order = request.args.get('order', 'desc')
+
+    query = ImageUpload.query
+
+    if search_user:
+        query = query.filter(ImageUpload.user.ilike(f"%{search_user}%"))
+
+    if search_filename:
+        query = query.filter(ImageUpload.filename.ilike(f"%{search_filename}%"))
+
+    if sort_by in ['filename', 'user', 'upload_date', 'pixel_count']:
+        if order == 'asc':
+            query = query.order_by(asc(getattr(ImageUpload, sort_by)))
+        else:
+            query = query.order_by(desc(getattr(ImageUpload, sort_by)))
+
+    uploads = query.all()
     return render_template('uploads.html', uploads=uploads)
 
 

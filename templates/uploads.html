@@ -44,6 +44,26 @@
 </head>
 <body>
     <h1>Listado de Imágenes Subidas</h1>
+    <form method="get" action="/uploads">
+        <label>Usuario: <input type="text" name="user" value="{{ request.args.get('user', '') }}"></label>
+        <label>Archivo: <input type="text" name="filename" value="{{ request.args.get('filename', '') }}"></label>
+        <label>Ordenar por:
+            <select name="sort_by">
+                <option value="upload_date">Fecha</option>
+                <option value="filename">Archivo</option>
+                <option value="user">Usuario</option>
+                <option value="pixel_count">Pixeles</option>
+            </select>
+        </label>
+        <label>Orden:
+            <select name="order">
+                <option value="desc">Descendente</option>
+                <option value="asc">Ascendente</option>
+            </select>
+        </label>
+        <button type="submit">Filtrar</button>
+    </form>
+
     <table border="1" cellpadding="6">
         <thead>
             <tr>
