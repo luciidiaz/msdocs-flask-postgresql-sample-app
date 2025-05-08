@@ -48,11 +48,26 @@ def view_uploads():
         query = query.filter(ImageUpload.user.ilike(f"%{search_user}%"))
     if search_filename:
         query = query.filter(ImageUpload.filename.ilike(f"%{search_filename}%"))
-    if sort_by in ['filename', 'user', 'upload_date', 'pixel_count']:
-        if order == 'asc':
-            query = query.order_by(asc(getattr(ImageUpload, sort_by)))
-        else:
-            query = query.order_by(desc(getattr(ImageUpload, sort_by)))
+    #if sort_by in ['filename', 'user', 'upload_date', 'pixel_count']:
+    #    if order == 'asc':
+    #        query = query.order_by(asc(getattr(ImageUpload, sort_by)))
+    #    else:
+    #        query = query.order_by(desc(getattr(ImageUpload, sort_by)))
+    sort_column = {
+        "filename": ImageUpload.filename,
+        "user": ImageUpload.user,
+        "upload_date": ImageUpload.upload_date,
+        "pixel_count": ImageUpload.pixel_count
+    }.get(sort_by, ImageUpload.upload_date)
+    
+    if order == 'asc':
+        query = query.order_by(asc(sort_column))
+    else:
+        query = query.order_by(desc(sort_column))
+    
+    #query = query.order_by(asc(sort_column)) if order == "asc" else query.order_by(desc(sort_column))
+
+
     if min_pixels is not None:
         query = query.filter(ImageUpload.pixel_count >= min_pixels)
     if max_pixels is not None:
