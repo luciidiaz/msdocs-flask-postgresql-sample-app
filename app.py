@@ -40,6 +40,8 @@ def view_uploads():
     search_filename = request.args.get('filename')
     sort_by = request.args.get('sort_by', 'upload_date')
     order = request.args.get('order', 'desc')
+    min_pixels = request.args.get('min_pixels', type=int)
+    max_pixels = request.args.get('max_pixels', type=int)
 
     query = ImageUpload.query
     if search_user:
@@ -51,6 +53,10 @@ def view_uploads():
             query = query.order_by(asc(getattr(ImageUpload, sort_by)))
         else:
             query = query.order_by(desc(getattr(ImageUpload, sort_by)))
+    if min_pixels is not None:
+        query = query.filter(ImageUpload.pixel_count >= min_pixels)
+    if max_pixels is not None:
+        query = query.filter(ImageUpload.pixel_count <= max_pixels)
     uploads = query.all()
     return render_template('uploads.html', uploads=uploads)
 

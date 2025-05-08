@@ -47,6 +47,8 @@
     <form method="get" action="/uploads">
         <label>Usuario: <input type="text" name="user" value="{{ request.args.get('user', '') }}"></label>
         <label>Archivo: <input type="text" name="filename" value="{{ request.args.get('filename', '') }}"></label>
+        <label>Píxeles mínimos: <input type="number" name="min_pixels" value="{{ request.args.get('min_pixels', '') }}"></label>
+        <label>Píxeles máximos: <input type="number" name="max_pixels" value="{{ request.args.get('max_pixels', '') }}"></label>    
         <label>Ordenar por:
             <select name="sort_by">
                 <option value="upload_date">Fecha</option>
