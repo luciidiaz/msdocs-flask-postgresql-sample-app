@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+from models import ImageUpload, ImageColor,  Restaurant, Review
 from flask import Flask, redirect, render_template, request, send_from_directory, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -41,19 +41,15 @@ def view_uploads():
     order = request.args.get('order', 'desc')
 
     query = ImageUpload.query
-
     if search_user:
         query = query.filter(ImageUpload.user.ilike(f"%{search_user}%"))
-
     if search_filename:
         query = query.filter(ImageUpload.filename.ilike(f"%{search_filename}%"))
-
     if sort_by in ['filename', 'user', 'upload_date', 'pixel_count']:
         if order == 'asc':
             query = query.order_by(asc(getattr(ImageUpload, sort_by)))
         else:
             query = query.order_by(desc(getattr(ImageUpload, sort_by)))
-
     uploads = query.all()
     return render_template('uploads.html', uploads=uploads)
 
@@ -70,9 +66,7 @@ else:
 
 app.config.update(
     SQLALCHEMY_DATABASE_URI=app.config.get('DATABASE_URI'),
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    # DEBUG: mostrar a qué host se está conectando
-    
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,    
 )
 
 
@@ -81,10 +75,6 @@ db = SQLAlchemy(app)
 
 # Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
 migrate = Migrate(app, db)
-
-# The import must be done after db initialization due to circular import issue
-from models import ImageUpload, ImageColor,  Restaurant, Review
-
 
 
 @app.route('/api/upload', methods=['POST'])
@@ -165,6 +155,10 @@ def index():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+
+
 
 @app.route('/<int:id>', methods=['GET'])
 def details(id):
