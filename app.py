@@ -1,6 +1,5 @@
 import os
-from datetime import datetime
-from models import ImageUpload, ImageColor,  Restaurant, Review
+
 from flask import Flask, redirect, render_template, request, send_from_directory, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -31,6 +30,8 @@ def allowed_file(filename):
 #def view_uploads():
 #    uploads = ImageUpload.query.order_by(ImageUpload.upload_date.desc()).all()
 #    return render_template('uploads.html', uploads=uploads)
+
+
 
 #para aplicar los filtros
 @app.route('/uploads', methods=['GET'])
@@ -76,6 +77,8 @@ db = SQLAlchemy(app)
 # Enable Flask-Migrate commands "flask db init/migrate/upgrade" to work
 migrate = Migrate(app, db)
 
+from datetime import datetime
+from models import ImageUpload, ImageColor,  Restaurant, Review
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
