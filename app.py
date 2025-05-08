@@ -99,7 +99,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from datetime import datetime
-from models import ImageUpload, ImageColor,  Restaurant, Review
+from models import ImageUpload, ImageColor
 
 @app.route('/api/upload', methods=['POST'])
 @csrf.exempt
